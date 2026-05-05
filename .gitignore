@@ -1,0 +1,23 @@
+# Android
+/build/
+/app/build/
+*.apk
+
+# Local config
+local.properties
+.gradle/
+
+# IDE
+.idea/
+*.iml
+
+# Keystore
+*.jks
+*.keystore
+
+# Optional but recommended
+files.zip
+extracted/
+
+# OS
+.DS_Store
