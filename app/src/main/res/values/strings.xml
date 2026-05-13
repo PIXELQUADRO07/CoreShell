@@ -1,0 +1,74 @@
+<resources>
+    <string name="app_name">CoreShell</string>
+    <string name="title_terminal">Terminale</string>
+    <string name="title_file">File</string>
+    <string name="title_server">Server</string>
+    <string name="title_file_manager">File Manager</string>
+    <string name="title_save_server">Salva Server</string>
+
+    <string name="ssh_manager">SSH Manager</string>
+    <string name="connect_to_server">Connetti al tuo server</string>
+    <string name="hint_host">Host (IP o dominio)</string>
+    <string name="hint_port">Porta</string>
+    <string name="hint_username">Username</string>
+    <string name="hint_password">Password</string>
+    <string name="hint_saved_commands">Comandi salvati per questo server (uno per riga)</string>
+    <string name="auth_type_password">Password</string>
+    <string name="auth_type_key">Chiave privata</string>
+    <string name="hint_private_key_path">Percorso chiave privata</string>
+    <string name="hint_key_passphrase">Passphrase chiave (opzionale)</string>
+    <string name="error_empty_private_key">Inserisci il percorso della chiave privata</string>
+    <string name="error_invalid_private_key">Impossibile importare la chiave privata</string>
+    <string name="btn_browse_key">Importa chiave</string>
+    <string name="host_key_prompt_title">Trust this host?</string>
+    <string name="host_key_prompt_message">Il server presenta questa chiave:
+
+%s
+
+Accetti e configuri temporaneamente questa chiave?</string>
+    <string name="host_key_prompt_accept">Accetta</string>
+    <string name="host_key_prompt_reject">Rifiuta</string>
+    <string name="btn_connect">Connetti</string>
+    <string name="btn_save_connection">Salva connessione</string>
+    <string name="btn_show_saved_servers">Mostra server salvati</string>
+    <string name="connecting">Connessione in corso…</string>
+
+    <string name="error_empty_host">Inserisci host</string>
+    <string name="error_invalid_port">Porta non valida (1-65535)</string>
+    <string name="error_empty_username">Inserisci username</string>
+    <string name="error_empty_password">Inserisci password</string>
+
+    <string name="hint_enter_command">Inserisci comando…</string>
+    <string name="label_saved_commands">Comandi salvati</string>
+    <string name="btn_clear">Clear</string>
+
+    <string name="msg_download_complete">Download completato: %1$s</string>
+    <string name="msg_download_failed">Download fallito: %1$s</string>
+    <string name="msg_upload_complete">Upload completato</string>
+    <string name="msg_upload_failed">Upload fallito: %1$s</string>
+    <string name="msg_delete_failed">Eliminazione fallita: %1$s</string>
+    <string name="msg_rename_failed">Rinomina fallita: %1$s</string>
+    <string name="msg_error_local_file">Impossibile aprire il file locale</string>
+
+    <string name="action_download">Download</string>
+    <string name="action_rename">Rinomina</string>
+    <string name="dialog_rename">Rinomina</string>
+    <string name="action_delete">Elimina</string>
+
+    <string name="dialog_new_folder">Nuova cartella</string>
+    <string name="dialog_delete_title">Elimina</string>
+    <string name="dialog_delete_msg">Eliminare \'%1$s\'?</string>
+    <string name="btn_cancel">Annulla</string>
+    <string name="btn_save">Salva</string>
+    <string name="btn_create">Crea</string>
+
+    <string name="msg_no_saved_servers">Nessun server salvato</string>
+    <string name="msg_never_connected">Mai connesso</string>
+    <string name="msg_last_connection">Ultima connessione: %1$s</string>
+    <string name="title_saved_servers">Server Salvati</string>
+    <string name="hint_nickname">Nickname (es. VPS Home)</string>
+
+    <string name="error_generic">Errore: %1$s</string>
+    <string name="error_simple">Errore</string>
+    <string name="error_unknown">Errore sconosciuto</string>
+</resources>

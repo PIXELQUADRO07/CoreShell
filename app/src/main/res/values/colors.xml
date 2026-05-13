@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="md_theme_primary">#4CAF82</color>
+    <color name="md_theme_on_primary">#00382B</color>
+    <color name="md_theme_primary_container">#005140</color>
+    <color name="md_theme_on_primary_container">#78FBBF</color>
+    <color name="md_theme_secondary">#B2CCBE</color>
+    <color name="md_theme_on_secondary">#1D352B</color>
+    <color name="md_theme_tertiary">#A1CFDB</color>
+    <color name="md_theme_background">#101418</color>
+    <color name="md_theme_on_background">#E0E3E1</color>
+    <color name="md_theme_surface">#181C1F</color>
+    <color name="md_theme_on_surface">#E0E3E1</color>
+    <color name="md_theme_error">#FFB4AB</color>
+    <color name="md_theme_surface_variant">#3F4946</color>
+
+    <!-- Terminale (stile GitHub Dark) -->
+    <color name="terminal_bg">#0D1117</color>
+    <color name="terminal_text">#E6EDF3</color>
+    <color name="terminal_green">#3FB950</color>
+    <color name="terminal_yellow">#D29922</color>
+    <color name="terminal_red">#F85149</color>
+    <color name="terminal_blue">#58A6FF</color>
+    <color name="terminal_cyan">#39C5CF</color>
+    <color name="terminal_prompt">#4CAF82</color>
+</resources>

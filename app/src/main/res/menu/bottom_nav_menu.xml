@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/terminalFragment"
+        android:title="@string/title_terminal"
+        android:icon="@drawable/ic_terminal"/>
+    <item
+        android:id="@+id/fileManagerFragment"
+        android:title="@string/title_file"
+        android:icon="@drawable/ic_folder_open"/>
+    <item
+        android:id="@+id/savedServersFragment"
+        android:title="@string/title_server"
+        android:icon="@drawable/ic_server"/>
+</menu>

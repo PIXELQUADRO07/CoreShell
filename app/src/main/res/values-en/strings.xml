@@ -1,0 +1,57 @@
+<resources>
+    <string name="app_name">CoreShell</string>
+    <string name="title_terminal">Terminal</string>
+    <string name="title_file">File</string>
+    <string name="title_server">Server</string>
+    <string name="title_file_manager">File Manager</string>
+    <string name="title_save_server">Save Server</string>
+
+    <string name="ssh_manager">SSH Manager</string>
+    <string name="connect_to_server">Connect to your server</string>
+    <string name="hint_host">Host (IP or domain)</string>
+    <string name="hint_port">Port</string>
+    <string name="hint_username">Username</string>
+    <string name="hint_password">Password</string>
+    <string name="btn_connect">Connect</string>
+    <string name="btn_save_connection">Save connection</string>
+    <string name="btn_show_saved_servers">Show saved servers</string>
+    <string name="connecting">Connecting…</string>
+
+    <string name="error_empty_host">Enter host</string>
+    <string name="error_invalid_port">Invalid port (1-65535)</string>
+    <string name="error_empty_username">Enter username</string>
+    <string name="error_empty_password">Enter password</string>
+
+    <string name="hint_enter_command">Enter command…</string>
+    <string name="btn_clear">Clear</string>
+
+    <string name="msg_download_complete">Download complete: %1$s</string>
+    <string name="msg_download_failed">Download failed: %1$s</string>
+    <string name="msg_upload_complete">Upload complete</string>
+    <string name="msg_upload_failed">Upload failed: %1$s</string>
+    <string name="msg_delete_failed">Delete failed: %1$s</string>
+    <string name="msg_rename_failed">Rename failed: %1$s</string>
+    <string name="msg_error_local_file">Unable to open local file</string>
+
+    <string name="action_download">Download</string>
+    <string name="action_rename">Rename</string>
+    <string name="dialog_rename">Rename</string>
+    <string name="action_delete">Delete</string>
+
+    <string name="dialog_new_folder">New folder</string>
+    <string name="dialog_delete_title">Delete</string>
+    <string name="dialog_delete_msg">Delete \'%1$s\'?</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_create">Create</string>
+
+    <string name="msg_no_saved_servers">No saved servers</string>
+    <string name="msg_never_connected">Never connected</string>
+    <string name="msg_last_connection">Last connection: %1$s</string>
+    <string name="title_saved_servers">Saved Servers</string>
+    <string name="hint_nickname">Nickname (e.g. VPS Home)</string>
+
+    <string name="error_generic">Error: %1$s</string>
+    <string name="error_simple">Error</string>
+    <string name="error_unknown">Unknown error</string>
+</resources>

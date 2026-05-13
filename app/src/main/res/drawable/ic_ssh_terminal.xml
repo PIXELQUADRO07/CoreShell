@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Terminal window/prompt background -->
+    <path
+        android:fillColor="#2D2D2D"
+        android:pathData="M15,20 H93 A5,5 0 0 1 98,25 V83 A5,5 0 0 1 93,88 H15 A5,5 0 0 1 10,83 V25 A5,5 0 0 1 15,20 Z" />
+    <!-- Terminal Prompt '>' -->
+    <path
+        android:fillColor="#00FF41"
+        android:pathData="M30,40 L45,54 L30,68 L34,72 L52,54 L34,36 Z" />
+    <!-- Terminal Cursor '_' -->
+    <path
+        android:fillColor="#00FF41"
+        android:pathData="M55,65 H75 V70 H55 Z" />
+</vector>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/connectionFragment">
+
+    <fragment
+        android:id="@+id/connectionFragment"
+        android:name="com.example.coreshell.ui.connection.ConnectionFragment"
+        android:label="Connessione">
+
+        <action
+            android:id="@+id/action_connection_to_main"
+            app:destination="@id/terminalFragment"
+            app:popUpTo="@id/connectionFragment"
+            app:popUpToInclusive="false"/>
+
+        <action
+            android:id="@+id/action_connection_to_savedServers"
+            app:destination="@id/savedServersFragment"/>
+
+        <action
+            android:id="@+id/action_connection_to_saveServerDialog"
+            app:destination="@id/saveServerDialogFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/terminalFragment"
+        android:name="com.example.coreshell.ui.terminal.TerminalFragment"
+        android:label="@string/title_terminal"/>
+
+    <fragment
+        android:id="@+id/fileManagerFragment"
+        android:name="com.example.coreshell.ui.filemanager.FileManagerFragment"
+        android:label="@string/title_file_manager"/>
+
+    <fragment
+        android:id="@+id/savedServersFragment"
+        android:name="com.example.coreshell.ui.servers.SavedServersFragment"
+        android:label="@string/title_saved_servers"/>
+
+    <dialog
+        android:id="@+id/saveServerDialogFragment"
+        android:name="com.example.coreshell.ui.servers.SaveServerDialogFragment"
+        android:label="@string/title_save_server"/>
+
+</navigation>
