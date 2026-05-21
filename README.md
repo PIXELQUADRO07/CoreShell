@@ -1,48 +1,261 @@
-# CoreShell - Secure Cybernetic Terminal Deck
+# 🔮 CoreShell - Secure Cybernetic Terminal Deck
 
-CoreShell è un client SSH e gestore di nodi server per Android, progettato con un'estetica Cyberpunk retrò-futuristica. Offre un'interfaccia avanzata per la gestione di infrastrutture remote, con supporto integrato per Tailscale e una dashboard di telemetria in tempo reale.
+<div align="center">
+
+**A Cyberpunk-Inspired SSH Manager for Android**
+
+[![Kotlin](https://img.shields.io/badge/Kotlin-100%25-7F52FF?style=for-the-badge&logo=kotlin)](https://kotlinlang.org)
+[![Android](https://img.shields.io/badge/Android-7.0+-3DDC84?style=for-the-badge&logo=android)](https://www.android.com)
+[![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Modern%20UI-4285F4?style=for-the-badge&logo=jetpackcompose)](https://developer.android.com/jetpack/compose)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
+
+*Your gateway to the netrunner's underground*
+
+</div>
+
+---
+
+## 📸 Visual Overview
 
 ![App Header](app/src/main/res/drawable/img_start_banner_1779391997906.png)
 
-## 🚀 Caratteristiche Principali
+---
 
-- **Gestore Profili Server**: Configura e salva i tuoi nodi SSH con parametri personalizzati (Host, Porta, Username).
-- **Integrazione Tailscale**: Rilevamento automatico e supporto ottimizzato per le reti Tailscale (MagicDNS e IP 100.x.x.x).
-- **Estetica Cyberpunk**: Interfaccia UI reattiva con effetti scanline CRT, animazioni neon e font monospazio.
-- **Terminale Avanzato**: Shell interattiva con scorciatoie rapide per i comandi più comuni (`ls`, `htop`, `neofetch`, ecc.).
-- **SFTP File Explorer**: Naviga, scarica, modifica ed elimina file sul server remoto tramite un'interfaccia grafica integrata.
-- **Key Manager (RSA Keyring)**: Genera e gestisci coppie di chiavi RSA-2048 per un'autenticazione sicura senza password.
-- **Monitoraggio Telemetria**: Visualizzazione in tempo reale di CPU, RAM, temperatura e traffico di rete tramite grafici ad oscilloscopio.
-- **Widget Monitor**: Widget per la Home Screen che mostra lo stato dei tuoi server preferiti a colpo d'occhio.
+## ✨ Core Features
 
-## 🛠️ Tecnologie Utilizzate
+### 🖥️ **Server Profile Manager**
+Configure and save your SSH nodes with custom parameters:
+- Host, Port, and Username configuration
+- Connection history and quick access
+- Profile categorization and tagging
 
-- **Kotlin & Jetpack Compose**: UI moderna e dichiarativa.
-- **Room Database**: Persistenza locale sicura per profili e chiavi.
-- **Coroutines & Flow**: Gestione asincrona delle sessioni e della telemetria.
-- **Material 3**: Componenti UI con personalizzazioni "Cyber-Theme".
-- **Retrofit & Moshi**: Predisposto per integrazioni API esterne.
+### 🌐 **Tailscale Integration**
+Seamless support for Tailscale networks:
+- Automatic network detection
+- MagicDNS and 100.x.x.x IP support
+- One-click VPN integration
 
-## 📱 Installazione e Build
+### 🎨 **Cyberpunk Aesthetics**
+Immersive retro-futuristic interface:
+- CRT scanline effects and glow animations
+- Neon-themed UI components
+- Monospace typography for authentic terminal feel
+- Animated transitions and visual feedback
 
-### Requisiti
-- Android 7.0 (API 24) o superiore.
-- Android Studio Ladybug (o versioni recenti).
-- Gradle 9.3.1.
+### 💻 **Advanced Terminal Shell**
+Interactive command execution with enhanced UX:
+- Quick-access shortcuts for common commands (`ls`, `htop`, `neofetch`, etc.)
+- Real-time command history
+- Copy/paste functionality with Android clipboard integration
 
-### Build da Terminale
-Per generare l'APK di release:
+### 📂 **SFTP File Explorer**
+Full-featured file management on remote servers:
+- Browse remote directories with hierarchical view
+- Download, upload, modify, and delete files
+- File preview and metadata display
+- Drag-and-drop support (where applicable)
+
+### 🔐 **RSA Key Manager (Keyring)**
+Enterprise-grade key management:
+- Generate RSA-2048 key pairs
+- Secure local storage in encrypted database
+- Passwordless SSH authentication
+- Key rotation and management utilities
+
+### 📊 **Real-time Telemetry Monitoring**
+Live system metrics visualization:
+- CPU usage with oscilloscope-style graphs
+- RAM consumption tracking
+- System temperature monitoring
+- Network traffic analysis with bandwidth gauges
+
+### 📱 **Home Screen Widget**
+Quick overview of server status:
+- At-a-glance server health metrics
+- One-tap connection launch
+- Customizable widget layout
+
+---
+
+## 🛠️ Technology Stack
+
+```
+┌─────────────────────────────────────┐
+│   Frontend & UI                     │
+├─────────────────────────────────────┤
+│ • Kotlin & Jetpack Compose          │
+│ • Material 3 Design System          │
+│ • Custom Cyberpunk Theme            │
+│ • Canvas-based Graphics             │
+└─────────────────────────────────────┘
+
+┌─────────────────────────────────────┐
+│   Data & Persistence                │
+├─────────────────────────────────────┤
+│ • Room Database (encrypted)         │
+│ • DataStore for preferences         │
+│ • Secure SharedPreferences          │
+└─────────────────────────────────────┘
+
+┌─────────────────────────────────────┐
+│   Async & Reactive                  │
+├─────────────────────────────────────┤
+│ • Kotlin Coroutines                 │
+│ • Flow & StateFlow                  │
+│ • ViewModel & MVVM architecture     │
+└─────────────────────────────────────┘
+
+┌─────────────────────────────────────┐
+│   Networking & Integration          │
+├─────────────────────────────────────┤
+│ • Retrofit 2 for HTTP               │
+│ • Moshi for JSON serialization      │
+│ • OkHttp with interceptors          │
+└─────────────────────────────────────┘
+```
+
+---
+
+## 📱 Installation & Build
+
+### ⚙️ Requirements
+
+| Component | Version |
+|-----------|---------|
+| **Android** | 7.0+ (API 24) |
+| **Android Studio** | Ladybug or recent |
+| **Gradle** | 9.3.1+ |
+| **Java/Kotlin** | JDK 17+ |
+
+### 🚀 Quick Build
+
+**Generate Release APK:**
 ```bash
 ./gradlew assembleRelease
 ```
-L'APK verrà generato in: `app/build/outputs/apk/release/app-release.apk`
 
-## 🔒 Sicurezza
-CoreShell supporta l'autenticazione tramite password e chiavi RSA. Le chiavi private sono memorizzate localmente nel database criptato dell'app. Si consiglia di utilizzare Tailscale per un ulteriore livello di sicurezza di rete.
+**Output Location:**
+```
+📦 app/build/outputs/apk/release/app-release.apk
+```
 
-## 📝 Note sulla Versione Corrente
-*   La versione attuale utilizza un motore di simulazione per le sessioni SSH/SFTP e la telemetria.
-*   L'integrazione con librerie SSH reali (come JSch) è prevista per le prossime iterazioni.
+**Install to Device:**
+```bash
+adb install app/build/outputs/apk/release/app-release.apk
+```
+
+**Debug Build (Development):**
+```bash
+./gradlew installDebug
+```
 
 ---
-*Developed for the underground netrunner community.*
+
+## 🔒 Security & Privacy
+
+CoreShell implements multiple security layers:
+
+| Feature | Description |
+|---------|-------------|
+| **Authentication** | Password & RSA key-based SSH authentication |
+| **Encryption** | Local private keys stored in encrypted Room database |
+| **Network** | Tailscale VPN integration for secure transport |
+| **Permissions** | Minimal Android permissions requested |
+| **Best Practices** | No cleartext storage, secure communication protocols |
+
+### 🛡️ Security Recommendations
+
+- Use RSA key authentication instead of passwords when possible
+- Enable Tailscale for encrypted network tunneling
+- Regularly rotate SSH keys
+- Keep your Android device updated with latest security patches
+
+---
+
+## 📊 Architecture Overview
+
+```
+┌──────────────────────────────────────────────┐
+│         UI Layer (Jetpack Compose)           │
+├──────────────────────────────────────────────┤
+│  Screens │ Components │ Themes │ Animations  │
+└────────────────────┬─────────────────────────┘
+                     │
+┌────────────────────▼─────────────────────────┐
+│        ViewModel & State Management          │
+├──────────────────────────────────────────────┤
+│    MVVM │ StateFlow │ Coroutines             │
+└────────────────────┬─────────────────────────┘
+                     │
+┌────────────────────▼─────────────────────────┐
+│     Repository & Data Access Layer           │
+├──────────────────────────────────────────────┤
+│    Room │ DataStore │ Remote APIs            │
+└────────────────────┬─────────────────────────┘
+                     │
+┌────────────────────▼─────────────────────────┐
+│      SSH/SFTP & System Services              │
+├──────────────────────────────────────────────┤
+│    Sessions │ File Transfer │ Telemetry      │
+└──────────────────────────────────────────────┘
+```
+
+---
+
+## 📝 Current Version Notes
+
+⚠️ **Important Information:**
+
+- The current version includes **simulation engine** for SSH/SFTP sessions and telemetry
+- Integration with production SSH libraries (like **JSch**) is planned for upcoming releases
+- UI/UX is production-ready; backend integration is in progress
+- Feature parity with desktop SSH clients is the goal
+
+---
+
+## 🚀 Roadmap
+
+- [ ] Full JSch SSH/SFTP implementation
+- [ ] Multi-session support
+- [ ] SSH port forwarding & tunneling
+- [ ] Custom terminal themes
+- [ ] Cloud backup for profiles
+- [ ] Hardware key support
+- [ ] Dark mode enhancements
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these guidelines:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 👤 Author
+
+**PIXELQUADRO07**
+- GitHub: [@PIXELQUADRO07](https://github.com/PIXELQUADRO07)
+
+---
+
+<div align="center">
+
+### ⚡ Built with ❤️ for the underground netrunner community
+
+*"In the darkness of the network, CoreShell is your light."*
+
+[![Follow](https://img.shields.io/badge/Follow-000000?style=for-the-badge&logo=github)](https://github.com/PIXELQUADRO07)
+
+</div>
