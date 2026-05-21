@@ -1,0 +1,6 @@
+{
+  "name": "CoreShell",
+  "description": "Redesigned cybernetic terminal shell SSH client & SFTP manager, engineered for secure access over peer-to-peer darknets and Tailscale connectivity.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
