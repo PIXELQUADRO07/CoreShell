@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -56,7 +57,10 @@ fun SshTerminalScreen(
     onSftpNavigate: (String, String) -> Unit,
     onSftpCreateFile: (String, String, String) -> Unit,
     onSftpDeleteNode: (String, String) -> Unit,
-    onSftpCreateDir: (String, String) -> Unit
+    onSftpCreateDir: (String, String) -> Unit,
+    onSftpReadFile: suspend (String, String) -> String,
+    onSftpUploadFile: (String, android.net.Uri, String) -> Unit,
+    onSftpDownloadFile: (String, String, android.net.Uri) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -89,9 +93,29 @@ fun SshTerminalScreen(
     var transferProgress by remember { mutableStateOf(0f) }
     var transferTitle by remember { mutableStateOf("SFTP UPLINK") }
 
+    // File Pickers
+    val uploadPicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        uri?.let {
+            val fileName = it.lastPathSegment?.substringAfterLast("/") ?: "uploaded_file"
+            activeSession?.let { s -> onSftpUploadFile(s.sessionId, it, fileName) }
+        }
+    }
+
+    val downloadPicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.CreateDocument("*/*")
+    ) { uri: android.net.Uri? ->
+        uri?.let {
+            editingFileEntry?.let { entry ->
+                activeSession?.let { s -> onSftpDownloadFile(s.sessionId, entry.name, it) }
+            }
+        }
+    }
+
     // Update oscilloscope graph histories periodically
-    LaunchedEffect(activeSessions) {
-        activeSessions.forEach { s ->
+    LaunchedEffect(activeSession?.cpuUsage, activeSession?.ramUsage) {
+        activeSession?.let { s ->
             if (s.connectionState == ConnectionState.CONNECTED) {
                 val cpuList = cpuHistoryMap.getOrPut(s.sessionId) { mutableListOf() }
                 cpuList.add(s.cpuUsage)
@@ -134,81 +158,89 @@ fun SshTerminalScreen(
                 Spacer(modifier = Modifier.width(4.dp))
 
                 // Scrollable Session tabs roster
-                LazyColumn(
+                LazyRow(
                     modifier = Modifier
                         .weight(1f)
                         .height(38.dp),
-                    horizontalAlignment = Alignment.Start,
-                    reverseLayout = false
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp)
                 ) {
-                    // We'll row orient it inside a horizontal Row representation
-                    item {
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            activeSessions.forEach { session ->
-                                val isSelected = session.sessionId == selectedSessionId
-                                val accentColorHex = session.profile.neonColorHex
-                                val sAccentColor = Color(android.graphics.Color.parseColor(accentColorHex))
+                    items(activeSessions) { session ->
+                        val isSelected = session.sessionId == selectedSessionId
+                        val accentColorHex = session.profile.neonColorHex
+                        val sAccentColor = Color(android.graphics.Color.parseColor(accentColorHex))
 
-                                Row(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(if (isSelected) CyberGray else Color.Transparent)
-                                        .border(
-                                            width = if (isSelected) 1.dp else 0.5.dp,
-                                            color = if (isSelected) sAccentColor else CyberGrayLight,
-                                            shape = RoundedCornerShape(4.dp)
-                                        )
-                                        .clickable { onSwitchSession(session.sessionId) }
-                                        .padding(horizontal = 10.dp, vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    // Status icon indicator
-                                    Box(
-                                        modifier = Modifier
-                                            .size(6.dp)
-                                            .clip(RoundedCornerShape(3.dp))
-                                            .background(
-                                                when (session.connectionState) {
-                                                    ConnectionState.CONNECTED -> CyberGreen
-                                                    ConnectionState.FAILED -> CyberPink
-                                                    else -> CyberCyan
-                                                }
-                                            )
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = session.profile.name.uppercase(),
-                                        color = if (isSelected) sAccentColor else TermWhite,
-                                        fontFamily = FontFamily.Monospace,
-                                        fontSize = 11.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Icon(
-                                        imageVector = Icons.Default.Close,
-                                        contentDescription = "Close session Tab",
-                                        tint = TermMuted,
-                                        modifier = Modifier
-                                            .size(12.dp)
-                                            .clickable { onCloseSession(session.sessionId) }
-                                    )
-                                }
-                            }
-
-                            // Plus tab to select another server profile
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(if (isSelected) CyberGray else Color.Transparent)
+                                .border(
+                                    width = if (isSelected) 1.dp else 0.5.dp,
+                                    color = if (isSelected) sAccentColor else CyberGrayLight,
+                                    shape = RoundedCornerShape(4.dp)
+                                )
+                                .clickable { onSwitchSession(session.sessionId) }
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Status icon indicator
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .border(1.dp, CyberCyan, RoundedCornerShape(4.dp))
-                                    .clickable { onNavigateBack() }
-                                    .padding(horizontal = 10.dp, vertical = 6.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.Add, contentDescription = "Add node", tint = CyberCyan, modifier = Modifier.size(12.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("CONNECT NEW", color = CyberCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                                }
+                                    .size(6.dp)
+                                    .clip(RoundedCornerShape(3.dp))
+                                    .background(
+                                        when (session.connectionState) {
+                                            ConnectionState.CONNECTED -> CyberGreen
+                                            ConnectionState.FAILED -> CyberPink
+                                            else -> CyberCyan
+                                        }
+                                    )
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = session.profile.name.uppercase(),
+                                color = if (isSelected) sAccentColor else TermWhite,
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 11.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Close session Tab",
+                                tint = TermMuted,
+                                modifier = Modifier
+                                    .size(12.dp)
+                                    .clickable { onCloseSession(session.sessionId) }
+                            )
+                        }
+                    }
+
+                    // Plus tab to select another server profile
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .border(1.dp, CyberCyan, RoundedCornerShape(4.dp))
+                                .clickable { onNavigateBack() }
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = "Add node",
+                                    tint = CyberCyan,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    "CONNECT NEW",
+                                    color = CyberCyan,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         }
                     }
@@ -417,14 +449,16 @@ fun SshTerminalScreen(
                                 // Interactive CLI Input panel
                                 Column {
                                     // Row with custom shell shortcut helpers to easily write commands
-                                    Row(
+                                    LazyRow(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .background(CyberDark)
                                             .padding(horizontal = 4.dp, vertical = 2.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        listOf("TAB", "ESC", "UP", "DOWN", "ls", "neofetch", "clear", "htop").forEach { shortcut ->
+                                        val commonSnippets = listOf("ls -la", "htop", "df -h", "free -m", "docker ps", "neofetch")
+                                        items(listOf("TAB", "ESC", "UP", "DOWN") + commonSnippets) { shortcut ->
                                             Box(
                                                 modifier = Modifier
                                                     .clip(RoundedCornerShape(2.dp))
@@ -432,26 +466,15 @@ fun SshTerminalScreen(
                                                     .border(0.5.dp, currentAccentColor.copy(alpha = 0.3f), RoundedCornerShape(2.dp))
                                                     .clickable {
                                                         when (shortcut) {
-                                                            "ls" -> onExecuteCommand(activeSession.sessionId, "ls")
-                                                            "neofetch" -> onExecuteCommand(activeSession.sessionId, "neofetch")
-                                                            "clear" -> onExecuteCommand(activeSession.sessionId, "clear")
-                                                            "htop" -> onExecuteCommand(activeSession.sessionId, "htop")
-                                                            "TAB" -> {
-                                                                // Simulated Tab autocomplete
-                                                                commandInputText += " "
-                                                            }
-                                                            "ESC" -> {
-                                                                commandInputText = ""
-                                                            }
+                                                            "TAB" -> { commandInputText += " " }
+                                                            "ESC" -> { commandInputText = "" }
                                                             "UP" -> {
-                                                                // Simulated up command history
                                                                 if (activeSession.commandHistory.isNotEmpty()) {
                                                                     commandInputText = activeSession.commandHistory.last()
                                                                 }
                                                             }
-                                                            "DOWN" -> {
-                                                                commandInputText = ""
-                                                            }
+                                                            "DOWN" -> { commandInputText = "" }
+                                                            else -> onExecuteCommand(activeSession.sessionId, shortcut)
                                                         }
                                                     }
                                                     .padding(horizontal = 8.dp, vertical = 6.dp),
@@ -526,7 +549,7 @@ fun SshTerminalScreen(
                                 }
                             } else {
                                 // SFTP PORT ARCHIVAL MANAGER VIEW
-                                val folderContents = activeSession.fileSystem.listDirectory(activeSession.sftpDirectory) ?: emptyList()
+                                val folderContents = activeSession.sftpFiles
 
                                 Column(
                                     modifier = Modifier
@@ -582,18 +605,15 @@ fun SshTerminalScreen(
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
                                         CyberButton(
-                                            text = "UPLOAD PAYLOAD",
+                                            text = "UPLOAD FILE",
                                             onClick = {
-                                                isNewDirectoryCreation = false
-                                                sftpFilenameInput = "payload-port-" + (folderContents.size + 1) + ".txt"
-                                                sftpContentInput = "SECURE_STREAM: decrypted nodes logs payload. data verified.\n"
-                                                showSftpCreateDialog = true
+                                                uploadPicker.launch("*/*")
                                             },
                                             color = CyberCyan,
                                             modifier = Modifier.weight(1f)
                                         )
                                         CyberButton(
-                                            text = "CREATE DIRECTORY",
+                                            text = "CREATE DIR",
                                             onClick = {
                                                 isNewDirectoryCreation = true
                                                 sftpFilenameInput = "node-" + (folderContents.size + 1)
@@ -630,10 +650,7 @@ fun SshTerminalScreen(
                                                                 transferProgress += 0.2f
                                                             }
                                                             isSimulatingTransfer = false
-                                                            // Read simulated file contents into terminal
-                                                            val content = activeSession.fileSystem.readFile(
-                                                                activeSession.fileSystem.resolvePath(activeSession.sftpDirectory, entry.name)
-                                                            ) ?: ""
+                                                            val content = onSftpReadFile(activeSession.sessionId, entry.name)
                                                             editingFileEntry = entry
                                                             editingFileContent = content
                                                         }
@@ -842,26 +859,37 @@ fun SshTerminalScreen(
                     }
                 },
                 confirmButton = {
-                    Button(
-                        onClick = {
-                            coroutineScope.launch {
-                                isSimulatingTransfer = true
-                                transferTitle = "SFTP INJECTING UPDATE..."
-                                transferProgress = 0f
-                                while (transferProgress < 1f) {
-                                    delay(100)
-                                    transferProgress += 0.25f
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = {
+                                downloadPicker.launch(entry.name)
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = CyberCyan),
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            Text("DOWNLOAD", color = CyberBlack, fontFamily = FontFamily.Monospace)
+                        }
+                        Button(
+                            onClick = {
+                                coroutineScope.launch {
+                                    isSimulatingTransfer = true
+                                    transferTitle = "SFTP INJECTING UPDATE..."
+                                    transferProgress = 0f
+                                    while (transferProgress < 1f) {
+                                        delay(100)
+                                        transferProgress += 0.25f
+                                    }
+                                    isSimulatingTransfer = false
+                                    onSftpCreateFile(activeSession?.sessionId ?: "", entry.name, editingFileContent)
+                                    editingFileEntry = null
+                                    Toast.makeText(context, "Resource update injected successfully.", Toast.LENGTH_SHORT).show()
                                 }
-                                isSimulatingTransfer = false
-                                onSftpCreateFile(activeSession?.sessionId ?: "", entry.name, editingFileContent)
-                                editingFileEntry = null
-                                Toast.makeText(context, "Resource update injected successfully.", Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = CyberGreen),
-                        shape = RoundedCornerShape(4.dp)
-                    ) {
-                        Text("SAVE CHANGES", color = CyberBlack, fontFamily = FontFamily.Monospace)
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = CyberGreen),
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            Text("SAVE CHANGES", color = CyberBlack, fontFamily = FontFamily.Monospace)
+                        }
                     }
                 },
                 dismissButton = {

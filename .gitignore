@@ -1,14 +1,36 @@
+# Build artifacts
+.gradle/
+build/
+app/build/
+.kotlin/
+
+# IDE files
+.idea/
 *.iml
-.gradle
-.kotlin
-/local.properties
-/.idea/
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-.env
-*.keystore
+*.ipr
+*.iws
+.vscode/
+
+# Android Studio
+local.properties
+.navigation/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Signing files
 *.jks
+*.keystore
+*.p12
 !debug.keystore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Sensitive environment variables
+.env
+.env.example

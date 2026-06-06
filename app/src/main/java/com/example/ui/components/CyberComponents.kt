@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -195,6 +196,36 @@ fun CyberButton(
 /**
  * Cyberpunk Telemetry Oscilloscope Graph (Rendered on Canvas)
  */
+@Composable
+fun GlitchTransition(
+    visible: Boolean,
+    content: @Composable () -> Unit
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "glitch")
+    val glitchOffset by infiniteTransition.animateFloat(
+        initialValue = -5f,
+        targetValue = 5f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(100, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glitch_offset"
+    )
+
+    if (visible) {
+        Box(modifier = Modifier.layout { measurable, constraints ->
+            val placeable = measurable.measure(constraints)
+            layout(placeable.width, placeable.height) {
+                // Apply a random-ish glitch offset to the layout during transition
+                val offset = if (kotlin.random.Random.nextFloat() > 0.8f) glitchOffset.toInt() else 0
+                placeable.placeRelative(offset, 0)
+            }
+        }) {
+            content()
+        }
+    }
+}
+
 @Composable
 fun OscilloscopeGraph(
     metricsHistory: List<Float>,
