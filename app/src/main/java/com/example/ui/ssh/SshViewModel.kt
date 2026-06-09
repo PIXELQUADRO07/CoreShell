@@ -43,6 +43,7 @@ class SshViewModel(application: Application) : AndroidViewModel(application) {
     // Real JSch sessions storage
     private val realSessions = mutableMapOf<String, Session>()
     private val shellChannels = mutableMapOf<String, com.jcraft.jsch.ChannelShell>()
+    private val shellOutputStreams = mutableMapOf<String, java.io.OutputStream>()
 
     // Telemetry updates loop job
     private var telemetryJob: Job? = null
@@ -61,7 +62,7 @@ class SshViewModel(application: Application) : AndroidViewModel(application) {
                         val session = realSessions[sessionState.sessionId]
                         if (session != null && session.isConnected) {
                             try {
-                                val telemetry = sshHelper.fetchTelemetry(session)
+                                val telemetry = sshHelper.fetchTelemetry(session, sessionState.sessionId)
                                 updateSessionState(sessionState.sessionId) { s ->
                                     s.copy(
                                         cpuUsage = telemetry.cpuUsage,
@@ -113,12 +114,13 @@ class SshViewModel(application: Application) : AndroidViewModel(application) {
                 realSessions[sessionId] = session
 
                 // Start Shell Channel
-                val shellChannel = sshHelper.openShell(session) { data ->
+                val (shellChannel, outputStream) = sshHelper.openShell(session) { data ->
                     updateSessionState(sessionId) { s ->
                         s.addOutput(data, TerminalLineType.REGULAR)
                     }
                 }
                 shellChannels[sessionId] = shellChannel
+                shellOutputStreams[sessionId] = outputStream
 
                 val files = try { sshHelper.listSftpFiles(session, "/") } catch(e: Exception) { emptyList() }
                 updateSessionState(sessionId) { s ->
@@ -146,6 +148,7 @@ class SshViewModel(application: Application) : AndroidViewModel(application) {
     fun closeSession(sessionId: String) {
         shellChannels[sessionId]?.disconnect()
         shellChannels.remove(sessionId)
+        shellOutputStreams.remove(sessionId)
         realSessions[sessionId]?.disconnect()
         realSessions.remove(sessionId)
         val currentList = _activeSessions.value.filter { it.sessionId != sessionId }
@@ -173,15 +176,16 @@ class SshViewModel(application: Application) : AndroidViewModel(application) {
         val cmd = rawCmd.trim()
         if (cmd.isEmpty()) return
 
-        val shellChannel = shellChannels[sessionId]
-        if (shellChannel == null || !shellChannel.isConnected) {
+        val os = shellOutputStreams[sessionId]
+        if (os == null) {
             updateSessionState(sessionId) { it.addOutput("Error: Shell disconnected", TerminalLineType.ERROR) }
             return
         }
 
+        updateSessionState(sessionId) { it.withCommand(cmd) }
+
         viewModelScope.launch {
             try {
-                val os = shellChannel.outputStream
                 os.write("$cmd\n".toByteArray())
                 os.flush()
             } catch (e: Exception) {

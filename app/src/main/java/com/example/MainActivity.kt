@@ -52,9 +52,7 @@ class MainActivity : AppCompatActivity() {
                             onSuccess = { isAuthenticated = true },
                             onError = { error ->
                                 android.widget.Toast.makeText(context, "AUTH ERROR: $error", android.widget.Toast.LENGTH_SHORT).show()
-                                // For development ease, we might not lock out here, 
-                                // but in a real app you would.
-                                isAuthenticated = true 
+                                isAuthenticated = false
                             }
                         )
                     } else {

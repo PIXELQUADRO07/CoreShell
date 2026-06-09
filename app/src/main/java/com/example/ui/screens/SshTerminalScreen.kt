@@ -71,6 +71,14 @@ fun SshTerminalScreen(
     // Command text inputs
     var commandInputText by remember { mutableStateOf("") }
 
+    // Split screen and multi-input state
+    var isSplitViewEnabled by remember { mutableStateOf(false) }
+    val splitCommandInputs = remember { mutableStateMapOf<String, String>() }
+
+    // SFTP search and sort queries
+    var sftpSearchQuery by remember { mutableStateOf("") }
+    var sftpSortType by remember { mutableStateOf("NAME") } // "NAME", "SIZE_ASC", "SIZE_DESC"
+
     // Active connection state target
     val activeSession = activeSessions.find { it.sessionId == selectedSessionId }
 
@@ -245,6 +253,20 @@ fun SshTerminalScreen(
                         }
                     }
                 }
+
+                if (activeSessions.size >= 2) {
+                    val currentAccentColor = Color(android.graphics.Color.parseColor(activeSession?.profile?.neonColorHex ?: "#00FFD1"))
+                    IconButton(
+                        onClick = { isSplitViewEnabled = !isSplitViewEnabled },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isSplitViewEnabled) Icons.Default.ViewAgenda else Icons.Default.ViewStream,
+                            contentDescription = "Toggle Split view",
+                            tint = if (isSplitViewEnabled) currentAccentColor else TermMuted
+                        )
+                    }
+                }
             }
 
             // PRIMARY DASHBOARD VIEW AREA
@@ -400,156 +422,60 @@ fun SshTerminalScreen(
                                 .fillMaxHeight()
                         ) {
                             if (activeSubTab == "TERMINAL") {
-                                // SHELL COMPONENT VIEW
-                                val listState = rememberLazyListState()
+                                if (isSplitViewEnabled && activeSessions.size >= 2) {
+                                    val session1 = activeSessions.getOrNull(0)
+                                    val session2 = activeSessions.getOrNull(1)
 
-                                // Auto Scroll to bottom when output arrives
-                                LaunchedEffect(activeSession.terminalLines.size) {
-                                    if (activeSession.terminalLines.isNotEmpty()) {
-                                        listState.animateScrollToItem(activeSession.terminalLines.size - 1)
-                                    }
-                                }
-
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxWidth()
-                                        .cyberScanlines()
-                                        .background(CyberBlack.copy(alpha = 0.9f))
-                                        .padding(8.dp)
-                                ) {
-                                    LazyColumn(
-                                        state = listState,
-                                        modifier = Modifier.fillMaxSize()
-                                    ) {
-                                        items(activeSession.terminalLines) { terminalLine ->
-                                            val tColor = when (terminalLine.type) {
-                                                TerminalLineType.INPUT_COMMAND -> currentAccentColor
-                                                TerminalLineType.HIGHLIGHT -> CyberCyan
-                                                TerminalLineType.SUCCESS -> CyberGreen
-                                                TerminalLineType.WARNING -> CyberYellow
-                                                TerminalLineType.ERROR -> CyberPink
-                                                TerminalLineType.TITLE -> CyberPink
-                                                TerminalLineType.SYSTEM -> TermMuted
-                                                else -> TermWhite
-                                            }
-                                            Text(
-                                                text = terminalLine.text,
-                                                color = tColor,
-                                                fontFamily = FontFamily.Monospace,
-                                                fontSize = 12.sp,
-                                                lineHeight = 16.sp,
-                                                fontWeight = if (terminalLine.type == TerminalLineType.INPUT_COMMAND) FontWeight.Bold else FontWeight.Normal,
-                                                modifier = Modifier.fillMaxWidth()
+                                    Column(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                                        if (session1 != null) {
+                                            val col1 = Color(android.graphics.Color.parseColor(session1.profile.neonColorHex))
+                                            TerminalConsole(
+                                                session = session1,
+                                                commandInputText = splitCommandInputs.getOrPut(session1.sessionId) { "" },
+                                                onCommandInputChange = { splitCommandInputs[session1.sessionId] = it },
+                                                onExecuteCommand = onExecuteCommand,
+                                                accentColor = col1,
+                                                modifier = Modifier.weight(1f).fillMaxWidth().border(0.5.dp, col1.copy(alpha = 0.4f))
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        if (session2 != null) {
+                                            val col2 = Color(android.graphics.Color.parseColor(session2.profile.neonColorHex))
+                                            TerminalConsole(
+                                                session = session2,
+                                                commandInputText = splitCommandInputs.getOrPut(session2.sessionId) { "" },
+                                                onCommandInputChange = { splitCommandInputs[session2.sessionId] = it },
+                                                onExecuteCommand = onExecuteCommand,
+                                                accentColor = col2,
+                                                modifier = Modifier.weight(1f).fillMaxWidth().border(0.5.dp, col2.copy(alpha = 0.4f))
                                             )
                                         }
                                     }
-                                }
-
-                                // Interactive CLI Input panel
-                                Column {
-                                    // Row with custom shell shortcut helpers to easily write commands
-                                    LazyRow(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .background(CyberDark)
-                                            .padding(horizontal = 4.dp, vertical = 2.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        val commonSnippets = listOf("ls -la", "htop", "df -h", "free -m", "docker ps", "neofetch")
-                                        items(listOf("TAB", "ESC", "UP", "DOWN") + commonSnippets) { shortcut ->
-                                            Box(
-                                                modifier = Modifier
-                                                    .clip(RoundedCornerShape(2.dp))
-                                                    .background(CyberGray)
-                                                    .border(0.5.dp, currentAccentColor.copy(alpha = 0.3f), RoundedCornerShape(2.dp))
-                                                    .clickable {
-                                                        when (shortcut) {
-                                                            "TAB" -> { commandInputText += " " }
-                                                            "ESC" -> { commandInputText = "" }
-                                                            "UP" -> {
-                                                                if (activeSession.commandHistory.isNotEmpty()) {
-                                                                    commandInputText = activeSession.commandHistory.last()
-                                                                }
-                                                            }
-                                                            "DOWN" -> { commandInputText = "" }
-                                                            else -> onExecuteCommand(activeSession.sessionId, shortcut)
-                                                        }
-                                                    }
-                                                    .padding(horizontal = 8.dp, vertical = 6.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Text(
-                                                    text = shortcut,
-                                                    color = currentAccentColor,
-                                                    fontFamily = FontFamily.Monospace,
-                                                    fontSize = 10.sp,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                            }
-                                        }
-                                    }
-
-                                    // Real terminal command prompt input field
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .background(CyberBlack)
-                                            .border(1.dp, CyberGrayLight)
-                                            .padding(8.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = "> ",
-                                            color = currentAccentColor,
-                                            fontWeight = FontWeight.Bold,
-                                            fontFamily = FontFamily.Monospace,
-                                            fontSize = 14.sp
-                                        )
-
-                                        BasicTextField(
-                                            value = commandInputText,
-                                            onValueChange = { commandInputText = it },
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .testTag("terminal_command_input"),
-                                            textStyle = LocalTextStyle.current.copy(
-                                                color = TermWhite,
-                                                fontFamily = FontFamily.Monospace,
-                                                fontSize = 14.sp
-                                            ),
-                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                                            keyboardActions = KeyboardActions(
-                                                onSend = {
-                                                    if (commandInputText.isNotBlank()) {
-                                                        onExecuteCommand(activeSession.sessionId, commandInputText)
-                                                        commandInputText = ""
-                                                    }
-                                                }
-                                            )
-                                        )
-
-                                        IconButton(
-                                            onClick = {
-                                                if (commandInputText.isNotBlank()) {
-                                                    onExecuteCommand(activeSession.sessionId, commandInputText)
-                                                    commandInputText = ""
-                                                }
-                                            },
-                                            modifier = Modifier.size(24.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Send,
-                                                contentDescription = "Send Command",
-                                                tint = currentAccentColor
-                                            )
-                                        }
-                                    }
+                                } else {
+                                    val currentAccentColor = Color(android.graphics.Color.parseColor(activeSession.profile.neonColorHex))
+                                    TerminalConsole(
+                                        session = activeSession,
+                                        commandInputText = commandInputText,
+                                        onCommandInputChange = { commandInputText = it },
+                                        onExecuteCommand = onExecuteCommand,
+                                        accentColor = currentAccentColor,
+                                        modifier = Modifier.weight(1f).fillMaxWidth()
+                                    )
                                 }
                             } else {
                                 // SFTP PORT ARCHIVAL MANAGER VIEW
                                 val folderContents = activeSession.sftpFiles
+                                val filteredFolderContents = remember(folderContents, sftpSearchQuery, sftpSortType) {
+                                    var list = folderContents.filter {
+                                        it.name.contains(sftpSearchQuery, ignoreCase = true)
+                                    }
+                                    list = when (sftpSortType) {
+                                        "SIZE_ASC" -> list.sortedWith(compareBy({ !it.isDirectory }, { it.size }, { it.name }))
+                                        "SIZE_DESC" -> list.sortedWith(compareBy({ !it.isDirectory }, { -it.size }, { it.name }))
+                                        else -> list.sortedWith(compareBy({ !it.isDirectory }, { it.name }))
+                                    }
+                                    list
+                                }
 
                                 Column(
                                     modifier = Modifier
@@ -626,6 +552,55 @@ fun SshTerminalScreen(
 
                                     Spacer(modifier = Modifier.height(10.dp))
 
+                                    // Search and Sort controls
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        OutlinedTextField(
+                                            value = sftpSearchQuery,
+                                            onValueChange = { sftpSearchQuery = it },
+                                            placeholder = { Text("Filter files...", fontSize = 11.sp, color = TermMuted) },
+                                            singleLine = true,
+                                            textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, fontSize = 11.sp),
+                                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = CyberCyan),
+                                            modifier = Modifier.weight(2f).height(48.dp)
+                                        )
+
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1.5f)
+                                                .height(48.dp)
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(CyberDark)
+                                                .border(0.5.dp, CyberCyan.copy(alpha = 0.3f), RoundedCornerShape(4.dp))
+                                                .clickable {
+                                                    sftpSortType = when (sftpSortType) {
+                                                        "NAME" -> "SIZE_ASC"
+                                                        "SIZE_ASC" -> "SIZE_DESC"
+                                                        else -> "NAME"
+                                                    }
+                                                }
+                                                .padding(horizontal = 8.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = when (sftpSortType) {
+                                                    "SIZE_ASC" -> "SORT: SIZE ▲"
+                                                    "SIZE_DESC" -> "SORT: SIZE ▼"
+                                                    else -> "SORT: NAME"
+                                                },
+                                                color = CyberCyan,
+                                                fontFamily = FontFamily.Monospace,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
                                     // Vertical grids of SFTP data directory items
                                     LazyVerticalGrid(
                                         columns = GridCells.Fixed(2),
@@ -633,7 +608,7 @@ fun SshTerminalScreen(
                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                                         modifier = Modifier.weight(1f)
                                     ) {
-                                        items(folderContents) { entry ->
+                                        items(filteredFolderContents) { entry ->
                                             SFTPNodeCard(
                                                 entry = entry,
                                                 onOpenNode = {
@@ -1035,5 +1010,159 @@ private fun formatSize(bytes: Long): String {
         bytes < 1024 -> "${bytes} B"
         bytes < 1024 * 1024 -> "${bytes / 1024} KB"
         else -> "${bytes / (1024 * 1024)} MB"
+    }
+}
+
+@Composable
+fun TerminalConsole(
+    session: SshSessionState,
+    commandInputText: String,
+    onCommandInputChange: (String) -> Unit,
+    onExecuteCommand: (String, String) -> Unit,
+    accentColor: Color,
+    modifier: Modifier = Modifier
+) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(session.terminalLines.size) {
+        if (session.terminalLines.isNotEmpty()) {
+            listState.animateScrollToItem(session.terminalLines.size - 1)
+        }
+    }
+
+    Column(modifier = modifier) {
+        // Output logs
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .cyberScanlines()
+                .background(CyberBlack.copy(alpha = 0.9f))
+                .padding(8.dp)
+        ) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(session.terminalLines) { terminalLine ->
+                    val tColor = when (terminalLine.type) {
+                        TerminalLineType.INPUT_COMMAND -> accentColor
+                        TerminalLineType.HIGHLIGHT -> CyberCyan
+                        TerminalLineType.SUCCESS -> CyberGreen
+                        TerminalLineType.WARNING -> CyberYellow
+                        TerminalLineType.ERROR -> CyberPink
+                        TerminalLineType.TITLE -> CyberPink
+                        TerminalLineType.SYSTEM -> TermMuted
+                        else -> TermWhite
+                    }
+                    Text(
+                        text = terminalLine.text,
+                        color = tColor,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 11.sp,
+                        lineHeight = 15.sp,
+                        fontWeight = if (terminalLine.type == TerminalLineType.INPUT_COMMAND) FontWeight.Bold else FontWeight.Normal,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
+
+        // Shortcuts
+        LazyRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(CyberDark)
+                .padding(horizontal = 4.dp, vertical = 2.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val commonSnippets = listOf("ls -la", "htop", "df -h", "free -m", "docker ps", "neofetch")
+            items(listOf("TAB", "ESC", "UP", "DOWN") + commonSnippets) { shortcut ->
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(CyberGray)
+                        .border(0.5.dp, accentColor.copy(alpha = 0.3f), RoundedCornerShape(2.dp))
+                        .clickable {
+                            when (shortcut) {
+                                "TAB" -> { onCommandInputChange(commandInputText + " ") }
+                                "ESC" -> { onCommandInputChange("") }
+                                "UP" -> {
+                                    if (session.commandHistory.isNotEmpty()) {
+                                        onCommandInputChange(session.commandHistory.last())
+                                    }
+                                }
+                                "DOWN" -> { onCommandInputChange("") }
+                                else -> onExecuteCommand(session.sessionId, shortcut)
+                            }
+                        }
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = shortcut,
+                        color = accentColor,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        // Input prompt
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(CyberBlack)
+                .border(1.dp, CyberGrayLight)
+                .padding(6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "${session.profile.name.lowercase().take(8)}> ",
+                color = accentColor,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.sp
+            )
+
+            BasicTextField(
+                value = commandInputText,
+                onValueChange = onCommandInputChange,
+                modifier = Modifier.weight(1f),
+                textStyle = LocalTextStyle.current.copy(
+                    color = TermWhite,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 12.sp
+                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                keyboardActions = KeyboardActions(
+                    onSend = {
+                        if (commandInputText.isNotBlank()) {
+                            onExecuteCommand(session.sessionId, commandInputText)
+                            onCommandInputChange("")
+                        }
+                    }
+                )
+            )
+
+            IconButton(
+                onClick = {
+                    if (commandInputText.isNotBlank()) {
+                        onExecuteCommand(session.sessionId, commandInputText)
+                        onCommandInputChange("")
+                    }
+                },
+                modifier = Modifier.size(24.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Send,
+                    contentDescription = "Send",
+                    tint = accentColor
+                )
+            }
+        }
     }
 }

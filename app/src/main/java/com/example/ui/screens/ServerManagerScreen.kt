@@ -52,6 +52,22 @@ fun ServerManagerScreen(
     var selectedNeonColorHex by remember { mutableStateOf("#00FFD1") } // Default electric cyan
     var isTailscaleState by remember { mutableStateOf(false) }
 
+    // Validation errors states
+    var nameError by remember { mutableStateOf<String?>(null) }
+    var hostError by remember { mutableStateOf<String?>(null) }
+    var portError by remember { mutableStateOf<String?>(null) }
+    var userError by remember { mutableStateOf<String?>(null) }
+
+    // Active Tailscale status state
+    var isTailscaleActive by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            isTailscaleActive = com.example.util.NetworkUtils.isTailscaleVpnActive()
+            kotlinx.coroutines.delay(5000)
+        }
+    }
+
     val colorsList = listOf("#00FFD1", "#FF00FF", "#39FF14", "#FFFFCC00", "#FF4500", "#9370DB")
 
     Box(
@@ -179,12 +195,12 @@ fun ServerManagerScreen(
                                 Icon(
                                     imageVector = Icons.Default.Cloud,
                                     contentDescription = "Tailscale Net",
-                                    tint = Color(0xFF00FFD1),
+                                    tint = if (isTailscaleActive) Color(0xFF00FFD1) else CyberPink,
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Text(
-                                    text = "TAILSCALE BACKPLANE SYSTEM",
-                                    color = Color(0xFF00FFD1),
+                                    text = "TAILSCALE SYSTEM: " + (if (isTailscaleActive) "ACTIVE" else "OFFLINE"),
+                                    color = if (isTailscaleActive) Color(0xFF00FFD1) else CyberPink,
                                     fontFamily = FontFamily.Monospace,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp
@@ -223,8 +239,18 @@ fun ServerManagerScreen(
                         Spacer(modifier = Modifier.height(4.dp))
                         
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Icon(imageVector = Icons.Default.CheckCircle, contentDescription = "check", tint = Color(0xFF00FFD1), modifier = Modifier.size(12.dp))
-                            Text("TUN interface bound: SUCCESS (direct android loop)", color = TermWhite, fontFamily = FontFamily.Monospace, fontSize = 10.sp)
+                            Icon(
+                                imageVector = if (isTailscaleActive) Icons.Default.CheckCircle else Icons.Default.Cancel, 
+                                contentDescription = "check", 
+                                tint = if (isTailscaleActive) Color(0xFF00FFD1) else CyberPink, 
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Text(
+                                text = "TUN interface bound: " + (if (isTailscaleActive) "SUCCESS (direct android loop)" else "OFFLINE"), 
+                                color = if (isTailscaleActive) TermWhite else TermMuted, 
+                                fontFamily = FontFamily.Monospace, 
+                                fontSize = 10.sp
+                            )
                         }
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             Icon(imageVector = Icons.Default.CheckCircle, contentDescription = "check", tint = Color(0xFF00FFD1), modifier = Modifier.size(12.dp))
@@ -267,6 +293,10 @@ fun ServerManagerScreen(
                     selectedKeyId = keyPairs.firstOrNull()?.id
                     selectedNeonColorHex = "#00FFD1"
                     isTailscaleState = false
+                    nameError = null
+                    hostError = null
+                    portError = null
+                    userError = null
                     showAddDialog = true
                 },
                 colors = CardDefaults.cardColors(containerColor = CyberDark.copy(alpha = 0.8f)),
@@ -382,9 +412,14 @@ fun ServerManagerScreen(
                         item {
                             OutlinedTextField(
                                 value = nameState,
-                                onValueChange = { nameState = it },
+                                onValueChange = { 
+                                    nameState = it
+                                    if (nameError != null) nameError = null
+                                },
                                 label = { Text("Profile Alias Name") },
                                 singleLine = true,
+                                isError = nameError != null,
+                                supportingText = nameError?.let { { Text(it, color = CyberPink, fontSize = 9.sp) } },
                                 textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
                                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = CyberCyan, focusedLabelColor = CyberCyan),
                                 modifier = Modifier.fillMaxWidth().testTag("profile_name_input")
@@ -393,9 +428,14 @@ fun ServerManagerScreen(
                         item {
                             OutlinedTextField(
                                 value = hostState,
-                                onValueChange = { hostState = it },
+                                onValueChange = { 
+                                    hostState = it
+                                    if (hostError != null) hostError = null
+                                },
                                 label = { Text("Host Address (IPv4 / DNS)") },
                                 singleLine = true,
+                                isError = hostError != null,
+                                supportingText = hostError?.let { { Text(it, color = CyberPink, fontSize = 9.sp) } },
                                 textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
                                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = CyberCyan, focusedLabelColor = CyberCyan),
                                 modifier = Modifier.fillMaxWidth().testTag("profile_host_input")
@@ -405,18 +445,28 @@ fun ServerManagerScreen(
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 OutlinedTextField(
                                     value = portState,
-                                    onValueChange = { portState = it },
+                                    onValueChange = { 
+                                        portState = it
+                                        if (portError != null) portError = null
+                                    },
                                     label = { Text("SSH Port") },
                                     singleLine = true,
+                                    isError = portError != null,
+                                    supportingText = portError?.let { { Text(it, color = CyberPink, fontSize = 9.sp) } },
                                     textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
                                     colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = CyberCyan, focusedLabelColor = CyberCyan),
                                     modifier = Modifier.weight(1f).testTag("profile_port_input")
                                 )
                                 OutlinedTextField(
                                     value = userState,
-                                    onValueChange = { userState = it },
+                                    onValueChange = { 
+                                        userState = it
+                                        if (userError != null) userError = null
+                                    },
                                     label = { Text("Admin Username") },
                                     singleLine = true,
+                                    isError = userError != null,
+                                    supportingText = userError?.let { { Text(it, color = CyberPink, fontSize = 9.sp) } },
                                     textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
                                     colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = CyberCyan, focusedLabelColor = CyberCyan),
                                     modifier = Modifier.weight(2f).testTag("profile_user_input")
@@ -611,12 +661,42 @@ fun ServerManagerScreen(
                 confirmButton = {
                     Button(
                         onClick = {
-                            if (hostState.isNotBlank()) {
+                            var hasError = false
+                            if (nameState.isBlank()) {
+                                nameError = "Alias cannot be blank"
+                                hasError = true
+                            } else {
+                                nameError = null
+                            }
+
+                            if (hostState.isBlank()) {
+                                hostError = "Host address cannot be blank"
+                                hasError = true
+                            } else {
+                                hostError = null
+                            }
+
+                            val pVal = portState.toIntOrNull()
+                            if (pVal == null || pVal !in 1..65535) {
+                                portError = "Port must be 1-65535"
+                                hasError = true
+                            } else {
+                                portError = null
+                            }
+
+                            if (userState.isBlank()) {
+                                userError = "Username cannot be blank"
+                                hasError = true
+                            } else {
+                                userError = null
+                            }
+
+                            if (!hasError) {
                                 onAddProfile(
                                     nameState,
                                     hostState,
                                     portState.toIntOrNull() ?: 22,
-                                    userState.ifBlank { "root" },
+                                    userState,
                                     authTypeState,
                                     passwordState,
                                     if (authTypeState == "RSA_KEY") selectedKeyId else null,
